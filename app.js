@@ -95,7 +95,7 @@ let authenticationToken = (request, response, next) => {
     jwtToken = autHeader.split(" ")[1];
   }
   if (jwtToken === undefined) {
-    response.send(401);
+    response.status(401);
     response.send("Invalid JWT Token");
   } else {
     jwt.verify(jwtToken, "MY_SECRET_TOKEN", async (error, user) => {
@@ -109,20 +109,60 @@ let authenticationToken = (request, response, next) => {
   }
 };
 //api 3 get
-app.get("/user/tweets/feed/", async (request, response) => {
-  const userQuery = `
+app.get(
+  "/user/tweets/feed/",
+  authenticationToken,
+  async (request, response) => {
+    const userQuery = `
     SELECT 
     username,
     tweet,
     date_time AS dateTime
     FROM 
     user,tweet,follower
-    WHERE 
-    following_user_id = ${tweet_id}
+    WHERE
+    following_user_id 
     ORDER BY username asc
     LIMIT 4
     OFFSET 1`;
+    const userArray = await db.all(userQuery);
+    response.send(userArray);
+  }
+);
+//api 4 get
+app.get("/user/following/", async (request, response) => {
+  const userQuery = `
+    SELECT 
+    name
+    FROM 
+    user, follower
+    WHERE 
+    user_id = ${following_user_id}`;
   const userArray = await db.all(userQuery);
   response.send(userArray);
+});
+//api 5 get
+app.get("/user/followers/", async (request, response) => {
+  const userFollowersQuery = `
+    SELECT 
+    name
+    FROM
+    user, follower;`;
+  const userArray = await db.all(userFollowersQuery);
+  response.send(userArray);
+});
+//api 6 get
+app.get("/tweets/:tweetId/", (request, response) => {
+  const { tweetId } = request.params;
+  if (tweetId === undefined) {
+    response.status(401);
+    response.send("Invalid Request");
+  } else {
+    const userTweetQuery = `
+        SELECT 
+        *
+        FROM
+        `;
+  }
 });
 module.exports = app;
